@@ -3,7 +3,6 @@ import { QueryCache } from './services/querycache';
 import { GeocodeService } from './services/gecodeservice';
 import { WikiNearbyService } from './services/wikinearbyservice';
 import { QueryCounter } from './services/querycounter';
-let app = express();
 
 var bodyParser = require('body-parser');
 var multer = require('multer');
@@ -16,6 +15,8 @@ var queries = new QueryCounter();
 var geoService = new GeocodeService();
 var wikiService = new WikiNearbyService();
 
+let app = express();
+
 app.use(bodyParser.urlencoded({
     extended: true
 }));
@@ -27,7 +28,6 @@ app.post('/purgeCache', upload.array(), (request, response) => {
     wikiNearbycache.clear();
 
     response
-    .status(200)
     .send('cache purged');
 });
 
@@ -42,14 +42,14 @@ app.get('/geocode', (request, response) => {
     }
 
     var address = request.query.address;
-    var result;
+
     if(geocodecache.has(address))
     {
         response.json(geocodecache.get(address));
         return;
     }
 
-    result = geoService.getCoordinates(address);
+    var result = geoService.getCoordinates(address);
 
     geocodecache.set(address, result);
     
@@ -66,17 +66,16 @@ app.get('/wikiNearby', (request, response) => {
         return;
     }
 
-    var ggscoord = request.query.lat + "|" + request.query.lon;
-    var result;
-    if(wikiNearbycache.has(ggscoord))
+    var coords = request.query.lat + "|" + request.query.lon;
+    if(wikiNearbycache.has(coords))
     {
-        response.json(wikiNearbycache.get(ggscoord));
+        response.json(wikiNearbycache.get(coords));
         return;
     }
     
-    result = wikiService.getNearbysList(ggscoord);
+    var result = wikiService.getNearbysList(coords);
 
-    wikiNearbycache.set(ggscoord, result);    
+    wikiNearbycache.set(coords, result);    
     
     response.json(result);
 });
